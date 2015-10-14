@@ -1,0 +1,141 @@
+#!/bin/bash
+set -e
+set -o pipefail
+set -o errtrace
+RED='\033[0;31m'
+BLACK='\033[0;30m'
+DARK_GRAY='\033[1;30m'
+RED='\033[0;31m'
+LIGHT_RED='\033[1;31m'
+GREEN='\033[0;32m'
+LIGHT_GREEN='\033[1;32m'
+BROWN='\033[0;33m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+LIGHT_BLUE='\033[1;34m'
+PURPLE='\033[0;35m'
+LIGHT_PURPLE='\033[1;35m'
+CYAN='\033[0;36m'
+LIGHT_CYAN='\033[1;36m'
+LIGHT_GRAY='\033[0;37m'
+WHITE='\033[1;37m'
+NC='\033[0m' # No Color
+. parseargs.sh
+
+usage1="$0
+
+Options:
+  -l                 Short flag
+  -m MODE            Short arg
+  --version          long flag
+  --bounce=BOUNCE    long arg
+  -s, --save         Short & long flag
+  -f FOO, --foo=FOO  Short & long arg
+"
+
+usage2="$0 <arg> [<optional_arg>] [<repeating_arg>...]"
+
+test-short-flag() {
+  parseargs "$usage1"
+  [ -z "$L" ]
+  parseargs "$usage1" -l
+  [ -n "$L" ]
+}
+
+test-short-arg() {
+  parseargs "$usage1"
+  [ -z "$MODE" ]
+  parseargs "$usage1" -m asdf
+  [ "$MODE" == "asdf" ]
+}
+
+test-long-flag() {
+  parseargs "$usage1"
+  [ -z "$VERSION" ]
+  parseargs "$usage1" --version
+  [ -n "$VERSION" ]
+}
+
+test-long-arg() {
+  parseargs "$usage1"
+  [ -z "$BOUNCE" ]
+  parseargs "$usage1" --bounce=asdf
+  [ "$BOUNCE" == "asdf" ]
+}
+
+test-short-long-flag() {
+  parseargs "$usage1"
+  [ -z "$SAVE" ]
+  parseargs "$usage1" -s
+  [ -n "$SAVE" ]
+  teardown
+  parseargs "$usage1" --save
+  [ -n "$SAVE" ]
+}
+
+test-short-long-arg() {
+  parseargs "$usage1"
+  [ -z "$FOO" ]
+  parseargs "$usage1" -f asdf
+  [ "$FOO" == "asdf" ]
+  teardown
+  parseargs "$usage1" --foo=jkl
+  [ "$FOO" == "jkl" ]
+}
+
+test-required() {
+  parseargs "$usage2" || local pass=1
+  [ -n "$pass" ]
+  parseargs "$usage2" asdf
+  [ "$ARG" == "asdf" ]
+}
+
+test-optional() {
+  parseargs "$usage2" a
+  [ -z "$OPTIONAL_ARG" ]
+  teardown
+  parseargs "$usage2" a foo
+  [ "$OPTIONAL_ARG" == "foo" ]
+}
+
+test-repeat() {
+  parseargs "$usage2" a
+  [ -z "$REPEATING_ARG" ]
+  teardown
+  parseargs "$usage2" a foo
+  [ -z "$REPEATING_ARG" ]
+  teardown
+  parseargs "$usage2" a foo bar
+  [ "$REPEATING_ARG" == "bar" ]
+  teardown
+  parseargs "$usage2" a foo bar baz
+  [ "$REPEATING_ARG" == "bar baz" ]
+}
+
+teardown() {
+  unset L MODE VERSION BOUNCE SAVE FOO ARG OPTIONAL_ARG REPEATING_ARG OPTIND
+}
+
+print-error() {
+  local sourcefile="$1"
+  local lineno="$2"
+  echo -e "${RED}fail${NC} - $current_test"
+  echo "Failure in $sourcefile:$lineno"
+  sed -n "${lineno}p" "$sourcefile"
+}
+trap 'print-error "$BASH_SOURCE" "$LINENO"' ERR
+
+main() {
+  if [ -n "$1" ]; then
+    local tests="$@"
+  else
+    local tests="$(declare -F | cut -f 3 -d ' ' | grep ^test)"
+  fi
+  for current_test in $tests; do
+    $current_test
+    echo -e "${GREEN}ok${NC} - $current_test"
+    teardown
+  done
+}
+
+main "$@"
