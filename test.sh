@@ -20,7 +20,7 @@ LIGHT_CYAN='\033[1;36m'
 LIGHT_GRAY='\033[0;37m'
 WHITE='\033[1;37m'
 NC='\033[0m' # No Color
-. parseargs.sh
+. ./parseargs.sh
 
 usage1="$0
 

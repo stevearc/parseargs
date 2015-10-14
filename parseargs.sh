@@ -199,6 +199,7 @@ parseargs() {
     esac
   done
   shift $(($OPTIND-1))
+  unset OPTIND
 
   # Parse positional arguments
   for arg in ${positional_args[@]}; do
