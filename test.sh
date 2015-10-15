@@ -112,8 +112,34 @@ test-repeat() {
   [ "$REPEATING_ARG" == "bar baz" ]
 }
 
+test-reset-opts() {
+  MODE=1
+  VERSION=1
+  BOUNCE=1
+  SAVE=1
+  L=1
+  FOO=1
+  resetargs "$usage1"
+  [ -z "$MODE" ]
+  [ -z "$VERSION" ]
+  [ -z "$BOUNCE" ]
+  [ -z "$SAVE" ]
+  [ -z "$L" ]
+  [ -z "$FOO" ]
+}
+
+test-reset-args() {
+  ARG=1
+  OPTIONAL_ARG=1
+  REPEATING_ARG=1
+  resetargs "$usage2"
+  [ -z "$ARG" ]
+  [ -z "$OPTIONAL_ARG" ]
+  [ -z "$REPEATING_ARG" ]
+}
+
 teardown() {
-  unset L MODE VERSION BOUNCE SAVE FOO ARG OPTIONAL_ARG REPEATING_ARG OPTIND
+  unset L MODE VERSION BOUNCE SAVE FOO ARG OPTIONAL_ARG REPEATING_ARG
 }
 
 print-error() {

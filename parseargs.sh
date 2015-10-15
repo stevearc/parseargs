@@ -11,7 +11,8 @@ cleanup() {
     _long_arg \
     _var_optional \
     _var_repeat \
-    _var_name
+    _var_name \
+    _shift_args
 }
 
 parse-variable() {
@@ -106,21 +107,27 @@ setvar() {
   eval "$varname=\"${2-1}\""
 }
 
-parseargs() {
-  cleanup
+unsetvar() {
+  local varname=${1^^}
+  eval "unset $varname"
+}
+
+parsedocs() {
   if [ -n "$USAGE" ]; then
     local usage="$USAGE"
+    _shift_args=
   else
-    local usage="${1?First argument must be the usage string}"; shift
+    local usage="${1?First argument must be the usage string}"
+    _shift_args=1
   fi
 
   local state="usage"
-  local -A short_args=()
-  local -A long_args=()
-  local -A short_to_long=()
-  local -a positional_args=()
-  local -A pos_arg_optional=()
-  local -A pos_arg_repeat=()
+  declare -g -A short_args=()
+  declare -g -A long_args=()
+  declare -g -A short_to_long=()
+  declare -g -a positional_args=()
+  declare -g -A pos_arg_optional=()
+  declare -g -A pos_arg_repeat=()
   while read -r line; do
     if [ "${line,,}" == "options:" ]; then
       local state="options"
@@ -142,6 +149,14 @@ parseargs() {
   debug "Short args: ${!short_args[@]}"
   debug "Long args: ${!long_args[@]}"
   debug "Positional args: ${!positional_args[@]}"
+}
+
+parseargs() {
+  cleanup
+  parsedocs "$@"
+  if [ $_shift_args ]; then
+    shift
+  fi
 
   local opts="h-:"
   for key in "${!short_args[@]}"; do
@@ -220,5 +235,32 @@ parseargs() {
     fi
   done
 
+  cleanup
+}
+
+resetargs() {
+  cleanup
+  parsedocs "$@"
+  for key in ${!long_args[@]}; do
+    local val=${long_args[$key]}
+    if [ "$val" == "1" ]; then
+      unsetvar "$key"
+    else
+      unsetvar "$val"
+    fi
+  done
+  for key in ${!short_args[@]}; do
+    if [ -z "${short_to_long[$key]}" ]; then
+    local val=${short_args[$key]}
+      if [ "$val" == "1" ]; then
+        unsetvar "$key"
+      else
+        unsetvar "$val"
+      fi
+    fi
+  done
+  for key in ${positional_args[@]}; do
+    unsetvar "$key"
+  done
   cleanup
 }
