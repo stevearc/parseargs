@@ -148,7 +148,7 @@ parsedocs() {
   done <<< "$usage"
   debug "Short args: ${!short_args[@]}"
   debug "Long args: ${!long_args[@]}"
-  debug "Positional args: ${!positional_args[@]}"
+  debug "Positional args: ${positional_args[@]}"
 }
 
 parseargs() {
@@ -157,7 +157,26 @@ parseargs() {
   if [ $_shift_args ]; then
     shift
   fi
+  _resetargs
+  _parseargs "$@"
+  local code=$?
+  cleanup
+  return $code
+}
 
+parseargsnoreset() {
+  cleanup
+  parsedocs "$@"
+  if [ $_shift_args ]; then
+    shift
+  fi
+  _parseargs "$@"
+  local code=$?
+  cleanup
+  return $code
+}
+
+_parseargs() {
   local opts="h-:"
   for key in "${!short_args[@]}"; do
     if [ "${short_args[$key]}" == "1" ]; then
@@ -234,13 +253,9 @@ parseargs() {
       return 1
     fi
   done
-
-  cleanup
 }
 
-resetargs() {
-  cleanup
-  parsedocs "$@"
+_resetargs() {
   for key in ${!long_args[@]}; do
     local val=${long_args[$key]}
     if [ "$val" == "1" ]; then
@@ -262,5 +277,11 @@ resetargs() {
   for key in ${positional_args[@]}; do
     unsetvar "$key"
   done
+}
+
+resetargs() {
+  cleanup
+  parsedocs "$@"
+  _resetargs
   cleanup
 }

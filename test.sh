@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 set -o pipefail
 set -o errtrace
 RED='\033[0;31m'
@@ -68,7 +67,6 @@ test-short-long-flag() {
   [ -z "$SAVE" ]
   parseargs "$usage1" -s
   [ -n "$SAVE" ]
-  teardown
   parseargs "$usage1" --save
   [ -n "$SAVE" ]
 }
@@ -78,7 +76,6 @@ test-short-long-arg() {
   [ -z "$FOO" ]
   parseargs "$usage1" -f asdf
   [ "$FOO" == "asdf" ]
-  teardown
   parseargs "$usage1" --foo=jkl
   [ "$FOO" == "jkl" ]
 }
@@ -93,7 +90,6 @@ test-required() {
 test-optional() {
   parseargs "$usage2" a
   [ -z "$OPTIONAL_ARG" ]
-  teardown
   parseargs "$usage2" a foo
   [ "$OPTIONAL_ARG" == "foo" ]
 }
@@ -101,13 +97,10 @@ test-optional() {
 test-repeat() {
   parseargs "$usage2" a
   [ -z "$REPEATING_ARG" ]
-  teardown
   parseargs "$usage2" a foo
   [ -z "$REPEATING_ARG" ]
-  teardown
   parseargs "$usage2" a foo bar
   [ "$REPEATING_ARG" == "bar" ]
-  teardown
   parseargs "$usage2" a foo bar baz
   [ "$REPEATING_ARG" == "bar baz" ]
 }
@@ -138,18 +131,31 @@ test-reset-args() {
   [ -z "$REPEATING_ARG" ]
 }
 
-teardown() {
-  unset L MODE VERSION BOUNCE SAVE FOO ARG OPTIONAL_ARG REPEATING_ARG
+test-parse-reset() {
+  MODE=1
+  parseargs "$usage1"
+  [ -z "$MODE" ]
+}
+
+test-parse-no-reset() {
+  MODE=1
+  parseargsnoreset "$usage1" -l
+  [ "$MODE" == "1" ]
+  [ -n "$L" ]
 }
 
 print-error() {
   local sourcefile="$1"
   local lineno="$2"
-  echo -e "${RED}fail${NC} - $current_test"
   echo "Failure in $sourcefile:$lineno"
   sed -n "${lineno}p" "$sourcefile"
+  _error=1
 }
 trap 'print-error "$BASH_SOURCE" "$LINENO"' ERR
+
+teardown() {
+  unset _error
+}
 
 main() {
   if [ -n "$1" ]; then
@@ -157,11 +163,26 @@ main() {
   else
     local tests="$(declare -F | cut -f 3 -d ' ' | grep ^test)"
   fi
+  local pass=0
+  local fail=0
   for current_test in $tests; do
     $current_test
-    echo -e "${GREEN}ok${NC} - $current_test"
+    if [ $_error ]; then
+      echo -e "${RED}fail${NC} - $current_test"
+      ((fail++)) || true
+    else
+      echo -e "${GREEN}ok${NC} - $current_test"
+      ((pass++)) || true
+    fi
     teardown
   done
+  echo
+  if [ $pass -gt 0 ]; then
+    echo -e "${GREEN}${pass} passing${NC}"
+  fi
+  if [ $fail -gt 0 ]; then
+    echo -e "${RED}${fail} failing${NC}"
+  fi
 }
 
 main "$@"
