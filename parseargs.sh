@@ -187,6 +187,7 @@ _parseargs() {
   done
   debug "Opts: $opts"
   debug "Parsing arguments: $*"
+  unset OPTIND
   while getopts "$opts" opt; do
     case $opt in
       -)
@@ -233,7 +234,6 @@ _parseargs() {
     esac
   done
   shift $(($OPTIND-1))
-  unset OPTIND
 
   # Parse positional arguments
   for arg in ${positional_args[@]}; do
