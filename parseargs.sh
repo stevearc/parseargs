@@ -193,7 +193,7 @@ _parseargs() {
         case $OPTARG in
           help)
             echo "$usage"
-            return 0
+            return 1
             ;;
           *)
             local key="$(echo "$OPTARG" | cut -f 1 -d =)"
@@ -213,7 +213,7 @@ _parseargs() {
         ;;
       h)
         echo "$usage"
-        return 0
+        return 1
         ;;
       \?)
         echo "$usage"
