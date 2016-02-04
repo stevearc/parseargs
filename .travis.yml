@@ -1,0 +1,12 @@
+sudo: false
+env:
+  - BVERSION=4.0
+  - BVERSION=4.1
+  - BVERSION=4.2
+  - BVERSION=4.3
+install:
+  - ./install-bash.sh $BVERSION
+cache:
+  directories:
+  - bash-${BVERSION}
+script: bash-${BVERSION}/bash test.sh

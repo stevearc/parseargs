@@ -1,5 +1,9 @@
 # parseargs
+[![Build Status](https://travis-ci.org/stevearc/parseargs.svg?branch=master)](https://travis-ci.org/stevearc/parseargs)
+
 Bash utility for parsing commandline arguments inspired by [docopt](http://docopt.org/)
+
+Requires bash>=4.0
 
 Example:
 ```bash
