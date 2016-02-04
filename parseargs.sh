@@ -71,7 +71,8 @@ parse-short-opt() {
 }
 
 parse-long-opt() {
-  local arg="$(echo "$1" | cut -f 3 -d -)"
+  # Trim whitespace, leading '--', and replace remaining '-' with '_'
+  local arg=$(echo $1 | sed 's/^[ \-]*//' | tr - _)
   local key="$(echo "$arg" | cut -f 1 -d =)"
   if [ "$arg" == "$key" ]; then
     local var=1
@@ -197,7 +198,7 @@ _parseargs() {
             return 1
             ;;
           *)
-            local key="$(echo "$OPTARG" | cut -f 1 -d =)"
+            local key="$(echo "$OPTARG" | cut -f 1 -d = | tr - _)"
             local val="$(echo "$OPTARG" | cut -f 2 -d =)"
             local varname="${long_args[$key]}"
             if [ -z "$varname" ]; then

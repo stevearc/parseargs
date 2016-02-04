@@ -26,10 +26,11 @@ usage1="$0
 Options:
   -l                 Short flag
   -m MODE            Short arg
-  --version          long flag
-  --bounce=BOUNCE    long arg
+  --version          Long flag
+  --bounce=BOUNCE    Long arg
   -s, --save         Short & long flag
   -f FOO, --foo=FOO  Short & long arg
+  --no-frobnicate    Long flag with dash
 "
 
 usage2="$0 <arg> [<optional_arg>] [<repeating_arg>...]"
@@ -53,6 +54,13 @@ test-long-flag() {
   [ -z "$VERSION" ]
   parseargs "$usage1" --version
   [ -n "$VERSION" ]
+}
+
+test-long-dash-flag() {
+  parseargs "$usage1"
+  [ -z "$NO_FROBNICATE" ]
+  parseargs "$usage1" --no-frobnicate
+  [ -n "$NO_FROBNICATE" ]
 }
 
 test-long-arg() {
