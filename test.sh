@@ -24,13 +24,14 @@ NC='\033[0m' # No Color
 usage1="$0
 
 Options:
-  -l                 Short flag
-  -m MODE            Short arg
-  --version          Long flag
-  --bounce=BOUNCE    Long arg
-  -s, --save         Short & long flag
-  -f FOO, --foo=FOO  Short & long arg
-  --no-frobnicate    Long flag with dash
+  -l                      Short flag
+  -m MODE                 Short arg
+  --version               Long flag
+  --bounce=BOUNCE         Long arg
+  -s, --save              Short & long flag
+  -f FOO, --foo=FOO       Short & long arg
+  --no-frobnicate         Long flag with dash
+  --drop-tables=TABLES    Long arg with dash
 "
 
 usage2="$0 <arg> [<optional_arg>] [<repeating_arg>...]"
@@ -68,6 +69,13 @@ test-long-arg() {
   [ -z "$BOUNCE" ]
   parseargs "$usage1" --bounce=asdf
   [ "$BOUNCE" == "asdf" ]
+}
+
+test-long-dashed-arg() {
+  parseargs "$usage1"
+  [ -z "$TABLES" ]
+  parseargs "$usage1" --drop-tables=foo,bar
+  [ -n "$TABLES" ]
 }
 
 test-short-long-flag() {
