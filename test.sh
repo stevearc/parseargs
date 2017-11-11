@@ -175,7 +175,7 @@ teardown() {
 
 main() {
   if [ -n "$1" ]; then
-    local tests="$@"
+    local tests="$*"
   else
     local tests="$(declare -F | cut -f 3 -d ' ' | grep ^test)"
   fi

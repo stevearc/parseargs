@@ -72,7 +72,7 @@ parse-short-opt() {
 
 parse-long-opt() {
   # Trim whitespace, leading '--', and replace remaining '-' with '_'
-  local arg=$(echo $1 | sed 's/^[ \-]*//' | tr - _)
+  local arg="$(echo "$1" | sed 's/^[ \-]*//' | tr - _)"
   local key="$(echo "$arg" | cut -f 1 -d =)"
   if [ "$arg" == "$key" ]; then
     local var=1
@@ -156,10 +156,13 @@ parseargs() {
   cleanup
   parsedocs "$@"
   if [ $_shift_args ]; then
+    local usage="$1"
     shift
+  else
+    local usage="$USAGE"
   fi
   _resetargs
-  _parseargs "$@"
+  _parseargs "$usage" "$@"
   local code=$?
   cleanup
   return $code
@@ -169,15 +172,19 @@ parseargsnoreset() {
   cleanup
   parsedocs "$@"
   if [ $_shift_args ]; then
+    local usage="$1"
     shift
+  else
+    local usage="$USAGE"
   fi
-  _parseargs "$@"
+  _parseargs "$usage" "$@"
   local code=$?
   cleanup
   return $code
 }
 
 _parseargs() {
+  local usage="$1"; shift
   local opts="h-:"
   for key in "${!short_args[@]}"; do
     if [ "${short_args[$key]}" == "1" ]; then
@@ -206,9 +213,9 @@ _parseargs() {
               echo "$usage"
               return 1
             elif [ "$varname" == 1 ]; then
-              setvar $key
+              setvar "$key"
             else
-              setvar $varname $val
+              setvar "$varname" "$val"
             fi
             ;;
         esac
@@ -229,23 +236,23 @@ _parseargs() {
           fi
           setvar $opt
         else
-          setvar $varname $OPTARG
+          setvar "$varname" "$OPTARG"
         fi
         ;;
     esac
   done
-  shift $(($OPTIND-1))
+  shift $((OPTIND-1))
 
   # Parse positional arguments
-  for arg in ${positional_args[@]}; do
+  for arg in "${positional_args[@]}"; do
     local val="$1"
     local optional="${pos_arg_optional[$arg]}"
     local repeat="${pos_arg_repeat[$arg]}"
     if [ -n "$val" ]; then
       if [ -n "$repeat" ]; then
-        setvar $arg "$*"
+        setvar "$arg" "$*"
       else
-        setvar $arg $val
+        setvar "$arg" "$val"
         shift
       fi
     elif [ -z "$optional" ]; then
@@ -257,7 +264,7 @@ _parseargs() {
 }
 
 _resetargs() {
-  for key in ${!long_args[@]}; do
+  for key in "${!long_args[@]}"; do
     local val=${long_args[$key]}
     if [ "$val" == "1" ]; then
       unsetvar "$key"
@@ -265,7 +272,7 @@ _resetargs() {
       unsetvar "$val"
     fi
   done
-  for key in ${!short_args[@]}; do
+  for key in "${!short_args[@]}"; do
     if [ -z "${short_to_long[$key]}" ]; then
     local val=${short_args[$key]}
       if [ "$val" == "1" ]; then
@@ -275,7 +282,7 @@ _resetargs() {
       fi
     fi
   done
-  for key in ${positional_args[@]}; do
+  for key in "${positional_args[@]}"; do
     unsetvar "$key"
   done
 }
